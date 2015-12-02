@@ -1,4 +1,4 @@
-var config = {
+module.exports = {
     credentials: {
         user: 'twitteruser',
         password: 'secret',
@@ -10,7 +10,11 @@ var config = {
         userInput: '#signin-email',
         passwordInput: '#signin-password',
         stream: "#stream-items-id",
+        updateButton: '#global-nav-home a',
     },
+    capture: {},
+    casperjsPath: './node_modules/.bin/casperjs',
+    phantomjsPath: './node_modules/.bin/phantomjs',
     casper: {
         verbose: true, 
         logLevel: 'debug',
@@ -18,7 +22,7 @@ var config = {
             loadPlugins: false,
             userAgent: "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:42.0) Gecko/20100101 Firefox/42.0",
         },
-    }
+    },
     mailer: {
         server: {
             user: 'mailuser',

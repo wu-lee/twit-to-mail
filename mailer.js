@@ -1,9 +1,11 @@
 /* This reads JSON objects output by twit-to-mailer.js from
  * stdin and mails them.
  */
-var email = require("emailjs/email");
+var email = require('emailjs/email');
+var path = require('path');
 var split = require('split');
-var config = require('./config.js');
+var child_process = require('child_process');
+var config = require('./config.js') || process.exit(-1);
 
 function send(tweets) {
     var server  = email.server.connect(config.mailer.server);
@@ -72,14 +74,28 @@ function formatTweet(tweet) {
 
 var tweets = [];
 function processLine (line) {
-    if (!line.match("^[{]"))
+    if (!line.match("^[{]")) {
+        console.log(line);
         return;
+    }
     var tweet = JSON.parse(line);
     console.log("received tweet, got "+tweets.length+": "+tweet.tweetId);
     tweets.push(tweet);
 }
 
-process.stdin.pipe(split()).on('data', processLine)
+var phantomjsDir = path.resolve(
+    process.cwd(),
+    path.dirname(config.phantomjsPath)
+);
+var child = child_process.spawn(
+    config.casperjsPath,
+    (config.casperjsOpts || []).concat('./scraper.js'),
+    { env: { PATH: process.env.PATH+':'+phantomjsDir }}
+);
+
+child.on('error', function(err) { console.log(err); process.exit(-1); })
+
+child.stdout.pipe(split()).on('data', processLine)
 
 setInterval(function() {
     if (tweets.length > 0) {

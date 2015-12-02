@@ -1,7 +1,6 @@
 var config = require('./config.js');
 var casper = require('casper').create(config.casper);
 
-
 var page = require('webpage').create();
 console.log('twit-to-mailer starting...');
 
@@ -17,6 +16,12 @@ casper.on('remote.message', function(msg) {
 // print out all the messages in the headless browser context
 casper.on("page.error", function(msg, trace) {
     this.echo(msg, "ERROR");
+});
+
+casper.on('error', function(err) {
+    console.log(err);
+    this.exit();
+    process.exit(-1);
 });
 
 casper.start(config.startUrl, function() {
@@ -53,10 +58,14 @@ casper.waitForSelector(
 casper.run(function() { 
 
     function poll() {
-        function scrape() {
+        var state = {
+            id: undefined,
+            seen: [],
+        };
+
+        function scrape(config, state) {
             var $ = window.jQuery;
 
-            var state = { id: undefined };
             console.log("starting scraper");
             
 
@@ -65,10 +74,17 @@ casper.run(function() {
                     console.log("skipping empty node (#"+ix+")");
                     return false;
                 }
+               
+                var tweet = jqnode.find('.original-tweet');
+                if (tweet.length > 0) {
+                    // Check if we've done this one already.
+                    var tweetId = tweet.attr('data-tweet-id');
+                    var skip = state.seen.indexOf(tweetId) < 0;
+                    state.seen.length = 200;
+                    console.log((skip? "skipping" : "keeping")+" tweet "+tweetId)
+                    return skip;
+                }
                 
-                if (jqnode.find('.original-tweet').length > 0)
-                    return true;
-
                 console.log("Skipping node #"+ix+": no .original-tweet", jqnode[0]);
                 return false;
             }
@@ -104,7 +120,7 @@ casper.run(function() {
                 return tweet;
             }
 
-            var children = $(config.selector.stream).children();
+            var children = $(config.selectors.stream).children();
 
             var tweets = children.get()
                 .reverse()
@@ -117,10 +133,10 @@ casper.run(function() {
         };
 
         if (config.capture.scrape)
-            casper.capture(config.capure.scrape);
-        var tweets = casper.evaluate(scrape);
+            casper.capture(config.capture.scrape);
+        var tweets = casper.evaluate(scrape, config, state);
 
-        casper.sendKeys('body', '.'); // update the stream 
+        casper.click(config.selectors.updateButton); // update the stream 
 
         casper.echo("tweets scraped: "+tweets.length+"\n"+
                     tweets.map(function(it) { return it.name }));
