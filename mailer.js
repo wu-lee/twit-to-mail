@@ -1,25 +1,12 @@
 /* This reads JSON objects output by twit-to-mailer.js from
  * stdin and mails them.
  */
-var email   = require("emailjs/email");
+var email = require("emailjs/email");
 var split = require('split');
-var mailInterval = 1000*60*1; // Millis
-
-var mail = {
-    server: {
-        user: 'someone',
-        password: 'secret',
-        host: 'mail.example.com',
-        tls: true,
-        timeout: 15000,
-        port: 25,
-    },
-    to: 'someone@example.com',
-    from: 'twitmonkey@twitmonkey.net',
-};
+var config = require('./config.js');
 
 function send(tweets) {
-    var server  = email.server.connect(mail.server);
+    var server  = email.server.connect(config.mailer.server);
     // FIXME errors?
 
     for(var ix = 0; ix < tweets.length; ix += 1) {
@@ -36,7 +23,7 @@ function send(tweets) {
         var opts = {
             text: tweet.text,
             from: tweeter+' <twitmonkey@twitmonkey.net>',
-            to: mail.to,
+            to: config.mailer.to,
             subject: subject,
             date: new Date(Number(tweet.date)).toString(),
             attachment: [
@@ -99,4 +86,4 @@ setInterval(function() {
         send(tweets);
         tweets.length = 0;
     }
-}, mailInterval);
+}, config.mailer.interval);

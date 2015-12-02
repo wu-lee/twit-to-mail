@@ -1,7 +1,7 @@
-var url = {
-    twitter: 'https://twitter.com/twitter',
-};
-var pollInterval = 1000*10; // 
+var config = require('./config.js');
+var casper = require('casper').create(config.casper);
+
+
 var page = require('webpage').create();
 console.log('twit-to-mailer starting...');
 
@@ -9,21 +9,48 @@ function output(tweets) {
     tweets.map(function(tweet) { console.log(JSON.stringify(tweet)); });
 }
 
-page.onConsoleMessage = function(msg) {
-    console.log('> ', msg);
-};
+// print out all the messages in the headless browser context
+casper.on('remote.message', function(msg) {
+    this.echo('remote.message: ' + msg);
+});
+
+// print out all the messages in the headless browser context
+casper.on("page.error", function(msg, trace) {
+    this.echo(msg, "ERROR");
+});
+
+casper.start(config.startUrl, function() {
+    this.echo("got "+this.getCurrentUrl());
+});
+
+casper.waitForSelector(config.selectors.loginForm, function() {
+    var selectors = {}
+    selectors[config.selectors.userInput] = config.credentials.user;
+    selectors[config.selectors.passwordInput] = config.credentials.password;
+    
+    this.fillSelectors(config.selectors.loginForm, selectors, true);
+
+    //this.echo(JSON.stringify(this.getFormValues(loginFormSelector)));// DEBUG
+    //this.capture('login.png'); // DEBUG
+});
 
 
-
-page.open(url.twitter, function(status) {
-
-    if (status !== 'success') {
-        console.log("exiting, status: ",status);
-
-        phantom.exit();
-        return;
+casper.waitForSelector(
+    config.selectors.stream,
+    function() {
+        this.echo("Got to twitter stream");        
+        if (config.capture.success)
+            this.capture(config.capture.success);
+    },
+    function() {
+        this.echo("Failed to get to twitter stream");
+        if (config.capture.failure)
+            this.capture(config.capture.failure);
     }
+);
 
+// Run this and don't exit
+casper.run(function() { 
 
     function poll() {
         function scrape() {
@@ -77,7 +104,7 @@ page.open(url.twitter, function(status) {
                 return tweet;
             }
 
-            var children = $('#stream-items-id').children();
+            var children = $(config.selector.stream).children();
 
             var tweets = children.get()
                 .reverse()
@@ -89,16 +116,17 @@ page.open(url.twitter, function(status) {
             return tweets;
         };
 
-        page.render('twitter.png');
-        var tweets = page.evaluate(scrape);
+        if (config.capture.scrape)
+            casper.capture(config.capure.scrape);
+        var tweets = casper.evaluate(scrape);
 
-        page.sendEvent('keypress', '.');
+        casper.sendKeys('body', '.'); // update the stream 
 
-        console.log("tweets scraped: "+tweets.length,
+        casper.echo("tweets scraped: "+tweets.length+"\n"+
                     tweets.map(function(it) { return it.name }));
         output(tweets);
     }
 
-    var interval = setInterval(poll, pollInterval);
-    
+    var interval = setInterval(poll, config.pollInterval);
 });
+

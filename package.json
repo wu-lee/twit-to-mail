@@ -9,8 +9,8 @@
   "author": "Nick Stokoe",
   "license": "AGPL-3.0",
   "dependencies": {
+    "casperjs": "^1.1.0",
     "emailjs": "^1.0.1",
-    "phantomjs": "^1.9.19",
     "split": "^1.0.0"
   }
 }
