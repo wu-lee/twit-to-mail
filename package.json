@@ -1,5 +1,5 @@
 {
-  "name": "TwitToMail",
+  "name": "twit-to-mail",
   "version": "0.1.0",
   "description": "Monitor twitter.com and email scraped tweets",
   "main": "index.js",
@@ -10,7 +10,6 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "emailjs": "^1.0.1",
-    "node-phantom": "^0.2.5",
     "phantomjs": "^1.9.19",
     "split": "^1.0.0"
   }
