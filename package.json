@@ -2,7 +2,7 @@
   "name": "twit-to-mail",
   "version": "0.1.0",
   "description": "Monitor twitter.com and email scraped tweets",
-  "main": "index.js",
+  "main": "twit-to-mail.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
