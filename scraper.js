@@ -79,10 +79,10 @@ casper.run(function() {
                 if (tweet.length > 0) {
                     // Check if we've done this one already.
                     var tweetId = tweet.attr('data-tweet-id');
-                    var skip = state.seen.indexOf(tweetId) < 0;
+                    var seen = state.seen.indexOf(tweetId) >= 0;
                     state.seen.length = 200;
-                    console.log((skip? "skipping" : "keeping")+" tweet "+tweetId)
-                    return skip;
+                    console.log((seen? "skipping" : "keeping")+" tweet "+tweetId)
+                    return !seen;
                 }
                 
                 console.log("Skipping node #"+ix+": no .original-tweet", jqnode[0]);
