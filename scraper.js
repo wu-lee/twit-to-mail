@@ -57,11 +57,12 @@ casper.waitForSelector(
 // Run this and don't exit
 casper.run(function() { 
 
+    var state = {
+        id: undefined,
+        seen: [],
+    };
+
     function poll() {
-        var state = {
-            id: undefined,
-            seen: [],
-        };
 
         function scrape(config, state) {
             var $ = window.jQuery;
@@ -74,17 +75,11 @@ casper.run(function() {
                     console.log("skipping empty node (#"+ix+")");
                     return false;
                 }
-               
-                var tweet = jqnode.find('.original-tweet');
-                if (tweet.length > 0) {
-                    // Check if we've done this one already.
-                    var tweetId = tweet.attr('data-tweet-id');
-                    var seen = state.seen.indexOf(tweetId) >= 0;
-                    state.seen.length = 200;
-                    console.log((seen? "skipping" : "keeping")+" tweet "+tweetId)
-                    return !seen;
-                }
                 
+		var tweet = jqnode.find('.original-tweet');
+                if (tweet.length > 0)
+		    return true;
+
                 console.log("Skipping node #"+ix+": no .original-tweet", jqnode[0]);
                 return false;
             }
@@ -120,13 +115,21 @@ casper.run(function() {
                 return tweet;
             }
 
+	    function dedupTweet(tweet) {
+                // Check if we've done this one already.
+                var seen = (state.seen.indexOf(tweet.tweetId) >= 0);
+                console.log((seen? "skipping" : "keeping")+" tweet "+tweet.tweetId,JSON.stringify(state));
+                return !seen;
+	    }
+
             var children = $(config.selectors.stream).children();
 
             var tweets = children.get()
                 .reverse()
                 .map($)
                 .filter(selectElement)
-                .map(formatTweet);
+                .map(formatTweet)
+		.filter(dedupTweet);
 
             children.remove();
             return tweets;
@@ -135,6 +138,15 @@ casper.run(function() {
         if (config.capture.scrape)
             casper.capture(config.capture.scrape);
         var tweets = casper.evaluate(scrape, config, state);
+
+	// Add seen tweets here (evaluate can't modify state passed as param)
+	tweets.forEach(function(tweet) {
+	    if (state.seen.indexOf(tweet.tweetId) < 0) {
+		console.log("adding unseen tweet "+tweet.tweetId); // DEBUG
+		state.seen.unshift(tweet.tweetId);
+	    }
+	})
+	state.seen.length = 200; // limit the size
 
         casper.click(config.selectors.updateButton); // update the stream 
 
