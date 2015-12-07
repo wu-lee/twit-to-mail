@@ -2,7 +2,7 @@ var config = require('./config.js');
 var casper = require('casper').create(config.casper);
 
 var page = require('webpage').create();
-console.log('twit-to-mailer starting...');
+console.log('scraper starting...');
 
 function output(tweets) {
     tweets.map(function(tweet) { console.log(JSON.stringify(tweet)); });
