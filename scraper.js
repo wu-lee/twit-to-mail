@@ -96,6 +96,7 @@ casper.run(function() {
                     hasCards: html.attr('data-has-cards') === 'true',
                     hasNativeMedia: html.attr('data-has-native-media') === 'true',
                     youFollow: html.attr('data-you-follows') === 'true',
+		    promoted: html.attr('data-promoted') === 'true',
                     cardType: html.attr('data-card-type'),
                     retweeter: html.attr('data-retweeter'),
                     userId: html.attr('data-user-id'),
@@ -115,6 +116,8 @@ casper.run(function() {
                 return tweet;
             }
 
+	    function noPromoted(tweet) { return !tweet.promoted }
+
 	    function dedupTweet(tweet) {
                 // Check if we've done this one already.
                 var seen = (state.seen.indexOf(tweet.tweetId) >= 0);
@@ -129,6 +132,7 @@ casper.run(function() {
                 .map($)
                 .filter(selectElement)
                 .map(formatTweet)
+		.filter(noPromoted);
 		.filter(dedupTweet);
 
             children.remove();
