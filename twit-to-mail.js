@@ -54,6 +54,14 @@ function cleanup(callback) {
     });
 };
 
+function sourceEscape(name) {
+    function escape(ch) {
+	return '%'+('0'+ch.toCharCodeAt(0).toString(16)).slice(-2);
+    }
+
+    return name.replace(/()<>@,;:\\".[]/g, escape);
+}
+
 function send(tweets) {
     var server  = email.server.connect(config.mailer.server);
     // FIXME errors?
@@ -62,7 +70,8 @@ function send(tweets) {
         var tweet = tweets[ix];
         
         var splitAfter = 30;
-        var tweeter = tweet.retweeter?
+        var tweeter = (tweet.retweeter == null? tweet.screenName : tweet.retweeter);
+        var source = tweet.retweeter?
             (tweet.name + " retweeted by "+tweet.retweeter):
             (tweet.name);
         var text = (tweet.text || '');
@@ -71,10 +80,11 @@ function send(tweets) {
             text.substr(0, splitPoint) : text;
         var opts = {
             text: tweet.text,
-            from: tweeter+' <twitmonkey@twitmonkey.net>',
+            from: sourceEscape(source) +' <'+ tweeter +'@twitmonkey.net>',
             to: config.mailer.to,
             subject: subject,
             date: new Date(Number(tweet.date)).toString(),
+            'x-tweet-id': tweet.tweetId,
             attachment: [
                 {data: formatTweet(tweet), alternative:true},
             ],
