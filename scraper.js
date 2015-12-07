@@ -127,8 +127,7 @@ casper.run(function() {
 
         casper.click(config.selectors.updateButton); // update the stream 
 
-        casper.echo("tweets scraped: "+tweets.length+"\n"+
-                    tweets.map(function(it) { return it.name }));
+        casper.echo("tweets scraped: "+tweets.length);
         output(tweets);
     }
 
