@@ -168,9 +168,12 @@ cleanup(writeState);
 
 child.stdout.pipe(split()).on('data', processLine)
 
-setInterval(function() {
+function sendPending() {
     if (state.tweets.length > 0) {
         send(state.tweets);
         state.tweets.length = 0;
     }
-}, config.mailer.interval);
+}
+
+setInterval(sendPending, config.mailer.interval);
+sendPending();
