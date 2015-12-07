@@ -57,14 +57,9 @@ casper.waitForSelector(
 // Run this and don't exit
 casper.run(function() { 
 
-    var state = {
-        id: undefined,
-        seen: [],
-    };
-
     function poll() {
 
-        function scrape(config, state) {
+        function scrape(config) {
             var $ = window.jQuery;
 
             console.log("starting scraper");
@@ -109,21 +104,10 @@ casper.run(function() {
                     html: html[0].outerHTML,
                     expandedFooter: expandedFooter,
                     text: html.find('.tweet-text').text(),
-                    follows: state.lastId,
                     tweetId: tweetId,
                 };
-                state.lastId = tweetId;
                 return tweet;
             }
-
-	    function noPromoted(tweet) { return !tweet.promoted }
-
-	    function dedupTweet(tweet) {
-                // Check if we've done this one already.
-                var seen = (state.seen.indexOf(tweet.tweetId) >= 0);
-                console.log((seen? "skipping" : "keeping")+" tweet "+tweet.tweetId,JSON.stringify(state));
-                return !seen;
-	    }
 
             var children = $(config.selectors.stream).children();
 
@@ -131,9 +115,7 @@ casper.run(function() {
                 .reverse()
                 .map($)
                 .filter(selectElement)
-                .map(formatTweet)
-		.filter(noPromoted);
-		.filter(dedupTweet);
+                .map(formatTweet);
 
             children.remove();
             return tweets;
@@ -141,16 +123,7 @@ casper.run(function() {
 
         if (config.capture.scrape)
             casper.capture(config.capture.scrape);
-        var tweets = casper.evaluate(scrape, config, state);
-
-	// Add seen tweets here (evaluate can't modify state passed as param)
-	tweets.forEach(function(tweet) {
-	    if (state.seen.indexOf(tweet.tweetId) < 0) {
-		console.log("adding unseen tweet "+tweet.tweetId); // DEBUG
-		state.seen.unshift(tweet.tweetId);
-	    }
-	})
-	state.seen.length = 200; // limit the size
+        var tweets = casper.evaluate(scrape, config);
 
         casper.click(config.selectors.updateButton); // update the stream 
 
@@ -164,7 +137,7 @@ casper.run(function() {
 	    poll();
 	}
 	catch(e) {
-	    caspar.echo("exception: "+e, "ERROR"),
+	    caspar.echo("exception: "+e, "ERROR");
 	}
     }
 

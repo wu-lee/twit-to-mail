@@ -3,9 +3,56 @@
  */
 var email = require('emailjs/email');
 var path = require('path');
+var fs = require('fs');
 var split = require('split');
 var child_process = require('child_process');
 var config = require('./config.js') || process.exit(-1);
+if (!config.stateFile)
+    config.stateFile = './state.json';
+var state = require(config.stateFile);
+if (!state.tweets) state.tweets = [];
+if (!state.seen) state.seen = [];
+
+
+var customFilter = function() { return true };
+if (config.filterFile) {
+    console.log("loading custom filter code in "+config.filterFile);
+    customFilter = require(config.filterFile);
+    if (!(customFilter instanceof Function)) {
+	console.log("invalid custom filter: not a function");
+	process.exit(-1);
+    }
+}
+
+
+function noOp() {};
+
+// Object to capture process exits and call app specific cleanup function
+function cleanup(callback) {
+    
+    // attach user callback to the process event emitter
+    // if no callback, it will still exit gracefully on Ctrl-C
+    callback = callback || noOp;
+    process.on('cleanup',callback);
+    
+    // do app specific cleaning before exiting
+    process.on('exit', function () {
+	process.emit('cleanup');
+    });
+    
+    // catch ctrl+c event and exit normally
+    process.on('SIGINT', function () {
+	console.log('Ctrl-C...');
+	process.exit(2);
+    });
+    
+    //catch uncaught exceptions, trace, then exit normally
+    process.on('uncaughtException', function(e) {
+	console.log('Uncaught Exception...');
+	console.log(e.stack);
+	process.exit(99);
+    });
+};
 
 function send(tweets) {
     var server  = email.server.connect(config.mailer.server);
@@ -34,6 +81,9 @@ function send(tweets) {
         };
         console.log("send to",opts.to,": ",opts.subject);
         server.send(opts, function(err, message) { if (err) console.log(err); });
+
+	state.seen.unshift(tweet.tweetId);
+	state.seen.length = (config.numDedupTweets || 200);
     }
 }
 
@@ -72,15 +122,34 @@ function formatTweet(tweet) {
 </html>';
 }
 
-var tweets = [];
+function writeState() {
+    fs.writeFileSync(config.stateFile, JSON.stringify(state));
+    console.log("saving state");
+}
+
+function dedupFilter(tweet) {
+    return state.seen.indexOf(tweet.tweetId) < 0;
+}
+
+function tweetFilter(tweet) {
+    return dedupFilter(tweet) && customFilter(tweet);
+}
+
+
 function processLine (line) {
     if (!line.match("^[{]")) {
-        console.log(line);
+        console.log("scraper: ",line);
         return;
     }
     var tweet = JSON.parse(line);
-    console.log("received tweet, got "+tweets.length+": "+tweet.tweetId);
-    tweets.push(tweet);
+    
+    if (tweetFilter(tweet)) {
+	console.log("received tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+	state.tweets.push(tweet);
+    }
+    else {
+	console.log("ignoring tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+    }
 }
 
 var phantomjsDir = path.resolve(
@@ -95,11 +164,13 @@ var child = child_process.spawn(
 
 child.on('error', function(err) { console.log(err); process.exit(-1); })
 
+cleanup(writeState);
+
 child.stdout.pipe(split()).on('data', processLine)
 
 setInterval(function() {
-    if (tweets.length > 0) {
-        send(tweets);
-        tweets.length = 0;
+    if (state.tweets.length > 0) {
+        send(state.tweets);
+        state.tweets.length = 0;
     }
 }, config.mailer.interval);
