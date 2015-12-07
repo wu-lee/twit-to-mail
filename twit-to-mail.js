@@ -105,7 +105,7 @@ function formatTweet(tweet) {
        max-height: none;\
     }\
     .OldMedia img {\
-       top: auto;\
+       top: auto !important;\
     }\
   </style>\
 </head>\
