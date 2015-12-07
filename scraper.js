@@ -142,5 +142,6 @@ casper.run(function() {
     }
 
     var interval = setInterval(pollWrapper, config.pollInterval);
+    pollWrapper();
 });
 
