@@ -143,6 +143,15 @@ casper.run(function() {
         output(tweets);
     }
 
-    var interval = setInterval(poll, config.pollInterval);
+    function pollWrapper() {
+	try {
+	    poll();
+	}
+	catch(e) {
+	    caspar.echo("exception: "+e, "ERROR"),
+	}
+    }
+
+    var interval = setInterval(pollWrapper, config.pollInterval);
 });
 
