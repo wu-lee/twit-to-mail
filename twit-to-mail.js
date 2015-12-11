@@ -111,10 +111,10 @@ function formatTweet(tweet) {
     .stream-container {\
        margin: 1em 58px;\
     }\
-    .OldMedia {\
-       max-height: none;\
+    .OldMedia, .AdaptiveMedia {\
+       max-height: none !important;\
     }\
-    .OldMedia img {\
+    .OldMedia img, .AdaptiveMedia img {\
        top: auto !important;\
     }\
   </style>\
