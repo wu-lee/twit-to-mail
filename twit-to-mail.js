@@ -110,6 +110,7 @@ function formatTweet(tweet) {
   <style>\
     .stream-container {\
        margin: 1em 58px;\
+       display: table;\
     }\
     .OldMedia, .AdaptiveMedia {\
        max-height: none !important;\
