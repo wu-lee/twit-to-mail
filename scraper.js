@@ -136,7 +136,7 @@ casper.run(function() {
 	    poll();
 	}
 	catch(e) {
-	    caspar.echo("exception: "+e, "ERROR");
+	    casper.echo("exception: "+e, "ERROR");
 	}
     }
 
