@@ -59,12 +59,12 @@ function cleanup(callback) {
     });
 };
 
-function sourceEscape2(name) {
-    function escape(ch) {
-	return '%'+('0'+ch.toCharCodeAt(0).toString(16)).slice(-2);
+function sourceEscape(name) {
+    function quote(str) {
+	return '"'+str.replace(/(["\\])/g, '\\$1')+'"'; 
     }
-
-    return name.replace(/()<>@,;:\\".[]/g, escape);
+    name = name.replace(/[\000-\0390]/g, ' ');
+    return name.match(/[()<>@,;:\\".[\]]/)? quote(name) : name;
 }
 
 function send(tweets) {
