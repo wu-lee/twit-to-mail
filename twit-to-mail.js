@@ -24,6 +24,11 @@ if (config.filterFile) {
     }
 }
 
+function log(message) {
+    [].unshift.call(arguments, new Date().toLocaleString());
+    console.log.apply(console, arguments)
+}
+
 
 function noOp() {};
 
@@ -48,13 +53,13 @@ function cleanup(callback) {
     
     //catch uncaught exceptions, trace, then exit normally
     process.on('uncaughtException', function(e) {
-	console.log('Uncaught Exception...');
-	console.log(e.stack);
+	log('Uncaught Exception...');
+	log(e.stack);
 	process.exit(99);
     });
 };
 
-function sourceEscape(name) {
+function sourceEscape2(name) {
     function escape(ch) {
 	return '%'+('0'+ch.toCharCodeAt(0).toString(16)).slice(-2);
     }
@@ -89,8 +94,8 @@ function send(tweets) {
                 {data: formatTweet(tweet), alternative:true},
             ],
         };
-        console.log("send to",opts.to,": ",opts.subject);
-        server.send(opts, function(err, message) { if (err) console.log(err); });
+        log("send to",opts.to,": ",opts.subject);
+        server.send(opts, function(err, message) { if (err) log(err); });
 
 	state.seen.unshift(tweet.tweetId);
 	state.seen.length = (config.numDedupTweets || 200);
@@ -135,7 +140,7 @@ function formatTweet(tweet) {
 
 function writeState() {
     fs.writeFileSync(config.stateFile, JSON.stringify(state));
-    console.log("saving state");
+    log("saving state");
 }
 
 function dedupFilter(tweet) {
@@ -149,17 +154,17 @@ function tweetFilter(tweet) {
 
 function processLine (line) {
     if (!line.match("^[{]")) {
-        console.log("scraper: ",line);
+        log("scraper: ",line);
         return;
     }
     var tweet = JSON.parse(line);
     
     if (tweetFilter(tweet)) {
-	console.log("received tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+	log("received tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
 	state.tweets.push(tweet);
     }
     else {
-	console.log("ignoring tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+	log("ignoring tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
     }
 }
 
@@ -173,7 +178,7 @@ var child = child_process.spawn(
     { env: { PATH: process.env.PATH+':'+phantomjsDir }}
 );
 
-child.on('error', function(err) { console.log(err); process.exit(-1); })
+child.on('error', function(err) { log(err); process.exit(-1); })
 
 cleanup(writeState);
 
