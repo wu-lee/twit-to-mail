@@ -74,7 +74,7 @@ function send(tweets) {
     for(var ix = 0; ix < tweets.length; ix += 1) {
         var tweet = tweets[ix];
         
-        var splitAfter = 30;
+        var splitAfter = config.mailer.subjectSplitAfter || 30;
         var tweeter = (tweet.retweeter == null? tweet.screenName : tweet.retweeter);
         var source = tweet.retweeter?
             (tweet.name + " retweeted by "+tweet.retweeter):
