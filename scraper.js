@@ -28,16 +28,25 @@ casper.start(config.startUrl, function() {
     this.echo("got "+this.getCurrentUrl());
 });
 
-casper.waitForSelector(config.selectors.loginForm, function() {
-    var selectors = {}
-    selectors[config.selectors.userInput] = config.credentials.user;
-    selectors[config.selectors.passwordInput] = config.credentials.password;
-    
-    this.fillSelectors(config.selectors.loginForm, selectors, true);
-
-    //this.echo(JSON.stringify(this.getFormValues(loginFormSelector)));// DEBUG
-    //this.capture('login.png'); // DEBUG
-});
+casper.waitForSelector(
+    config.selectors.loginForm,
+    function() {
+	var selectors = {}
+	selectors[config.selectors.userInput] = config.credentials.user;
+	selectors[config.selectors.passwordInput] = config.credentials.password;
+	
+	this.fillSelectors(config.selectors.loginForm, selectors, true);
+	
+	//this.echo(JSON.stringify(this.getFormValues(loginFormSelector)));// DEBUG
+	//this.capture('login.png'); // DEBUG
+    },
+    function() {
+        this.echo("Failed to get to twitter login form");
+        if (config.capture.failure)
+            this.capture(config.capture.failure);
+	process.exit(-1);
+    }
+);
 
 
 casper.waitForSelector(
@@ -51,6 +60,7 @@ casper.waitForSelector(
         this.echo("Failed to get to twitter stream");
         if (config.capture.failure)
             this.capture(config.capture.failure);
+	process.exit(-1);
     }
 );
 
