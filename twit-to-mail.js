@@ -9,7 +9,13 @@ var child_process = require('child_process');
 var config = require('./config.js') || process.exit(-1);
 if (!config.stateFile)
     config.stateFile = './state.json';
-var state = require(config.stateFile);
+var state = {};
+try {
+    state = require(config.stateFile);
+}
+catch(e) { // No such file, create it                                                                 
+    writeState();
+}
 if (!state.tweets) state.tweets = [];
 if (!state.seen) state.seen = [];
 
