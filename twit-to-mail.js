@@ -180,7 +180,7 @@ function processLine (line) {
 
 var phantomjsDir = path.resolve(
     process.cwd(),
-    path.dirname(config.phantomjsPath)
+    config.phantomjsDir || 'node_modules/.bin'
 );
 var child = child_process.spawn(
     config.casperjsPath,

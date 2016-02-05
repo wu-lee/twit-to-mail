@@ -14,7 +14,7 @@ module.exports = {
     },
     capture: {},
     casperjsPath: './node_modules/.bin/casperjs',
-    phantomjsPath: './node_modules/casperjs/node_modules/.bin/phantomjs',
+    phantomjsDir: './node_modules/casperjs/node_modules/.bin',
     casper: {
         verbose: true, 
         logLevel: 'debug',
