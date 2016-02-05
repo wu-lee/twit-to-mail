@@ -23,7 +23,12 @@ if (!state.seen) state.seen = [];
 var customFilter = function() { return true };
 if (config.filterFile) {
     console.log("loading custom filter code in "+config.filterFile);
-    customFilter = require(config.filterFile);
+    customFilter = noOp; // returns true, so doesn't filter
+    try {
+        customFilter = require(config.filterFile);
+    }
+    catch(e) {
+    }
     if (!(customFilter instanceof Function)) {
 	console.log("invalid custom filter: not a function");
 	process.exit(-1);
@@ -35,8 +40,7 @@ function log(message) {
     console.log.apply(console, arguments)
 }
 
-
-function noOp() {};
+function noOp() { return true; };
 
 // Object to capture process exits and call app specific cleanup function
 function cleanup(callback) {
