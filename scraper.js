@@ -81,9 +81,9 @@ casper.run(function() {
                     return false;
                 }
                 
-		var tweet = jqnode.find('.original-tweet');
+		        var tweet = jqnode.find('.original-tweet');
                 if (tweet.length > 0)
-		    return true;
+		            return true;
 
                 console.log("Skipping node #"+ix+": no .original-tweet", jqnode[0]);
                 return false;
@@ -101,7 +101,7 @@ casper.run(function() {
                     hasCards: html.attr('data-has-cards') === 'true',
                     hasNativeMedia: html.attr('data-has-native-media') === 'true',
                     youFollow: html.attr('data-you-follows') === 'true',
-		    promoted: html.attr('data-promoted') === 'true',
+		            promoted: html.attr('data-promoted') === 'true',
                     cardType: html.attr('data-card-type'),
                     retweeter: html.attr('data-retweeter'),
                     userId: html.attr('data-user-id'),
