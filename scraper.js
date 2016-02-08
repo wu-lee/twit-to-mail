@@ -22,12 +22,12 @@ casper.on('remote.message', function(msg) {
 
 // print out all the messages in the headless browser context
 casper.on("page.error", function(msg, trace) {
-    this.echo(msg, "ERROR");
+    this.echo("page error: "+JSON.stringify(msg), "ERROR");
     this.echo(readTrace(trace), "ERROR");
 });
 
 casper.on("resource.error", function(msg, trace) {
-    this.echo(msg, "ERROR");
+    this.echo("resource error: "+JSON.stringify(msg), "ERROR");
     this.echo(readTrace(trace), "ERROR");
 });
 
