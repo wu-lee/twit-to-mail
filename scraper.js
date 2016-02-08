@@ -37,6 +37,25 @@ casper.on('error', function(err) {
     process.exit(-1);
 });
 
+// We want to avoid errors like:
+// undefined is not a function evaluating document.createElement("video").canPlayType(...)
+casper.on('page.initialized', function (page) {
+    page.evaluate(function () { 
+        delete window.callPhantom;
+        delete window._phantom;
+        var original = {
+            createElement: document.createElement,
+        };
+        document.createElement = function (tag) {
+            var elem = original.createElement.call(document, tag);
+            if (tag === "video") {
+                elem.canPlayType = function () { return "" };
+            }
+            return elem;
+        };
+    });        
+});
+
 casper.start(config.startUrl, function() {
     this.echo("got "+this.getCurrentUrl());
 });
