@@ -8,6 +8,13 @@ function output(tweets) {
     tweets.map(function(tweet) { console.log(JSON.stringify(tweet)); });
 }
 
+function readTrace(trace) {
+    return trace.map(function(it) {
+        return ' -> ' + (it.file || it.sourceURL) + ': ' + it.line +
+            (it.function ? ' (in function ' + it.function +')' : '')
+    }).join("\n");
+}
+
 // print out all the messages in the headless browser context
 casper.on('remote.message', function(msg) {
     this.echo('remote.message: ' + msg);
@@ -16,10 +23,16 @@ casper.on('remote.message', function(msg) {
 // print out all the messages in the headless browser context
 casper.on("page.error", function(msg, trace) {
     this.echo(msg, "ERROR");
+    this.echo(readTrace(trace), "ERROR");
+});
+
+casper.on("resource.error", function(msg, trace) {
+    this.echo(msg, "ERROR");
+    this.echo(readTrace(trace), "ERROR");
 });
 
 casper.on('error', function(err) {
-    console.log(err);
+    console.log("error:", err);
     this.exit();
     process.exit(-1);
 });
