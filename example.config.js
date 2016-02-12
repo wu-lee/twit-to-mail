@@ -4,7 +4,7 @@ module.exports = {
         password: 'secret',
     },
     startUrl: 'https://twitter.com/',
-    pollInterval: 1000*10, // millis
+    pollInterval: 1000*60*15, // millis
     selectors: {
         loginForm: 'form.signin',
         userInput: '#signin-email',
