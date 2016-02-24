@@ -188,11 +188,21 @@ var child = child_process.spawn(
     { env: { PATH: process.env.PATH+':'+phantomjsDir }}
 );
 
-child.on('error', function(err) { log(err); process.exit(-1); })
+child.on('error', function(err) {
+    log("error managing scraper.js (pid "+child.pid+"): "+err);
+    process.exit(-1);
+});
+child.on('exit', function(code, signal) { 
+    log("scraper.js (pid "+child.pid+")"+
+	(code==null? "" : " exited with code "+code)+
+	(signal==null? "" : " was halted with signal "+signal));
+    process.exit(-1);
+});
 
 cleanup(writeState);
 
 child.stdout.pipe(split()).on('data', processLine)
+child.stderr.pipe(split()).on('data', processLine)
 
 function sendPending() {
     if (state.tweets.length > 0) {
