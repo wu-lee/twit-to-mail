@@ -150,7 +150,7 @@ function formatTweet(tweet) {
 <head>\
   <meta charset="utf-8">\
   <base href="http://twitter.com" target="_blank"></base>\
-  <title>Tweets</title>\
+  <title>Tweet</title>\
   <link href="https://abs.twimg.com/a/1448417839/css/t1/twitter_core.bundle.css" rel="stylesheet"></link>\
   <link href="https://abs.twimg.com/a/1448417839/css/t1/twitter_more_1.bundle.css" rel="stylesheet"></link>\
   <link href="https://abs.twimg.com/a/1448417839/css/t1/twitter_more_2.bundle.css" rel="stylesheet"></link>\
@@ -168,7 +168,6 @@ function formatTweet(tweet) {
   </style>\
 </head>\
 <body >\
-  <h1 class="page">Tweets</h1>\
   <div class="stream-container">\
   <div class="stream">\
   <ol>\
