@@ -40,31 +40,48 @@ function log(message) {
     console.log.apply(console, arguments)
 }
 
+var notified = false;
+function notify(subject, text) {
+    if (notified)
+	return;
+    
+    try {
+	sendNotification(subject, text);
+    }
+    catch(e) {
+	log("failed to send notification email: "+e);
+    }
+    
+    notified = true;
+}
+
 function noOp() { return true; };
 
 // Object to capture process exits and call app specific cleanup function
 function cleanup(callback) {
-    
+ 
     // attach user callback to the process event emitter
     // if no callback, it will still exit gracefully on Ctrl-C
     callback = callback || noOp;
     process.on('cleanup',callback);
     
     // do app specific cleaning before exiting
-    process.on('exit', function () {
+    process.on('exit', function (code) {
+	notify("twit-to-mail.js exited: "+code);
 	process.emit('cleanup');
     });
     
     // catch ctrl+c event and exit normally
     process.on('SIGINT', function () {
 	console.log('Ctrl-C...');
-	process.exit(2);
+	process.exit(98);
     });
     
     //catch uncaught exceptions, trace, then exit normally
     process.on('uncaughtException', function(e) {
 	log('Uncaught Exception...');
 	log(e.stack);
+	notify("twit-to-mail.js exception: "+e, JSON.stringify(e));
 	process.exit(99);
     });
 };
@@ -75,6 +92,21 @@ function sourceEscape(name) {
     }
     name = name.replace(/[\000-\0390]/g, ' ');
     return name.match(/[()<>@,;:\\".[\]]/)? quote(name) : name;
+}
+
+function sendNotification(subject, text) {
+    var server  = email.server.connect(config.mailer.server);
+    // FIXME errors?
+
+    var opts = {
+        text: text || " ",
+        from: 'Twitter Gateway <gateway@twitmonkey.net>',
+        to: config.mailer.to,
+        subject: subject || "empty notification",
+        date: new Date().toString(),
+    };
+    log("notify "+opts.to+": "+opts.subject);
+    server.send(opts, function(err, message) { if (err) log(err); });
 }
 
 function send(tweets) {
@@ -104,7 +136,7 @@ function send(tweets) {
                 {data: formatTweet(tweet), alternative:true},
             ],
         };
-        log("send to",opts.to,": ",opts.subject);
+        log("send to "+opts.to+": "+opts.subject);
         server.send(opts, function(err, message) { if (err) log(err); });
 
 	state.seen.unshift(tweet.tweetId);
@@ -190,12 +222,15 @@ var child = child_process.spawn(
 
 child.on('error', function(err) {
     log("error managing scraper.js (pid "+child.pid+"): "+err);
+    notify("error managing scraper.js", err);
     process.exit(-1);
 });
 child.on('exit', function(code, signal) { 
-    log("scraper.js (pid "+child.pid+")"+
+    var msg = "scraper.js (pid "+child.pid+")"+
 	(code==null? "" : " exited with code "+code)+
-	(signal==null? "" : " was halted with signal "+signal));
+	(signal==null? "" : " was halted with signal "+signal);
+    log(msg);
+    notify("unexpected termination of scraper.js", msg);
     process.exit(-1);
 });
 
