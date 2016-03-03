@@ -165,6 +165,9 @@ function formatTweet(tweet) {
     .OldMedia img, .AdaptiveMedia img {\
        top: auto !important;\
     }\
+    .PlayableMedia {\
+       height: auto !important;\
+    }\
   </style>\
 </head>\
 <body >\
