@@ -216,30 +216,41 @@ var phantomjsDir = path.resolve(
     process.cwd(),
     config.phantomjsDir || 'node_modules/.bin'
 );
-var child = child_process.spawn(
-    config.casperjsPath,
-    (config.casperjsOpts || []).concat('./scraper.js'),
-    { env: { PATH: process.env.PATH+':'+phantomjsDir }}
-);
 
-child.on('error', function(err) {
-    log("error managing scraper.js (pid "+child.pid+"): "+err);
-    notify("error managing scraper.js", err);
-    process.exit(-1);
-});
-child.on('exit', function(code, signal) { 
-    var msg = "scraper.js (pid "+child.pid+")"+
-	(code==null? "" : " exited with code "+code)+
-	(signal==null? "" : " was halted with signal "+signal);
-    log(msg);
-    notify("unexpected termination of scraper.js", msg);
-    process.exit(-1);
-});
+function Scraper() {
+    var self = this; // for use in inner closures
+    this.process = child_process.spawn(
+	config.casperjsPath,
+	(config.casperjsOpts || []).concat('./scraper.js'),
+	{ env: { PATH: process.env.PATH+':'+phantomjsDir }}
+    );
+    var pid = this.process.pid;
+
+    this.process.on('error', function(err) {
+	log("error managing scraper.js (pid "+pid+"): "+err);
+	notify("error managing scraper.js", err);
+	process.exit(-1);
+    });
+    this.process.on('exit', function(code, signal) { 
+	var msg = "scraper.js (pid "+pid+")"+
+	    (code==null? "" : " exited with code "+code)+
+	    (signal==null? "" : " was halted with signal "+signal);
+	log(msg);
+	notify("unexpected termination of scraper.js", msg);
+
+	// relaunch the scraper
+	self.process = new Scraper();
+    });
+
+    this.process.stdout.pipe(split()).on('data', processLine)
+    this.process.stderr.pipe(split()).on('data', processLine)
+
+    return this;
+}
+
+var scraper = new Scraper();
 
 cleanup(writeState);
-
-child.stdout.pipe(split()).on('data', processLine)
-child.stderr.pipe(split()).on('data', processLine)
 
 function sendPending() {
     if (state.tweets.length > 0) {
