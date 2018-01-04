@@ -20,21 +20,7 @@ if (!state.tweets) state.tweets = [];
 if (!state.seen) state.seen = [];
 
 
-var customFilter = function() { return true };
-if (config.filterFile) {
-    console.log("loading custom filter code in "+config.filterFile);
-    customFilter = noOp; // returns true, so doesn't filter
-    try {
-        customFilter = require(config.filterFile);
-    }
-    catch(e) {
-    }
-    if (!(customFilter instanceof Function)) {
-	console.log("invalid custom filter: not a function");
-	process.exit(-1);
-    }
-}
-
+var filter = config.filter || noOp; // noOp returns true, so doesn't filter
 function log(message) {
     [].unshift.call(arguments, new Date().toLocaleString());
     console.log.apply(console, arguments)
@@ -195,7 +181,7 @@ function dedupFilter(tweet) {
 }
 
 function tweetFilter(tweet) {
-    return dedupFilter(tweet) && customFilter(tweet);
+    return dedupFilter(tweet) && filter(tweet);
 }
 
 
