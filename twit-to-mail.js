@@ -20,6 +20,11 @@ if (!state.tweets) state.tweets = [];
 if (!state.seen) state.seen = [];
 
 
+// This may exit the process if it fails
+var attachmentTemplate = parseAttachmentTemplate(
+    'resources/attachmentTemplate.html',
+    config.attachmentTemplate
+);
 var filter = config.filter || noOp; // noOp returns true, so doesn't filter
 var formatter = config.formatter || formatTweet; 
 
@@ -73,6 +78,32 @@ function cleanup(callback) {
 	process.exit(99);
     });
 };
+
+/** Loads a string from the file, if not supplied as the second paramter
+ *
+ * If the template parameter is falsy, and the file is absent, prints a diagnostic
+ * and terminates the process.
+ *
+ * @param {string} file The file to load
+ * @param {string} template An optional template to use instead of the file
+ * @returns {string[]} A two-element array containing the head and tail sections of the attachment
+ */
+function parseAttachmentTemplate(file, template) {
+    if (!template) {
+        try {
+            template = fs.readFileSync(file, 'utf8');
+        }
+        catch(e) { // No such file
+            console.error("failed to load '"+file+"': "+e.message);
+            process.exit(-1);
+        }
+    }
+    // Extract head and tail elements of template as elements 0 and 1
+    template = template.split('<tweet/>', 2);
+    if (template.length != 2)
+        console.error("attachment template malformed, may have no <tweet/> placeholder");
+    return [template[0] || '', template[1] || ''];
+}
 
 function sourceEscape(name) {
     function quote(str) {
@@ -133,44 +164,7 @@ function send(tweets) {
 }
 
 function formatTweet(tweet) {
-    return '<!DOCTYPE html>\
-<html>\
-<head>\
-  <meta charset="utf-8">\
-  <base href="http://twitter.com" target="_blank"></base>\
-  <title>Tweet</title>\
-  <link href="https://abs.twimg.com/a/1448417839/css/t1/twitter_core.bundle.css" rel="stylesheet"></link>\
-  <link href="https://abs.twimg.com/a/1448417839/css/t1/twitter_more_1.bundle.css" rel="stylesheet"></link>\
-  <link href="https://abs.twimg.com/a/1448417839/css/t1/twitter_more_2.bundle.css" rel="stylesheet"></link>\
-  <style>\
-    .stream-container {\
-       margin: 1em 58px;\
-       display: table;\
-    }\
-    .OldMedia, .AdaptiveMedia {\
-       max-height: none !important;\
-    }\
-    .OldMedia img, .AdaptiveMedia img {\
-       top: auto !important;\
-    }\
-    .PlayableMedia {\
-       height: auto !important;\
-    }\
-    .AdaptiveMedia-singlePhoto {\
-      padding-top: inherit !important;\
-    }\
-  </style>\
-</head>\
-<body >\
-  <div class="stream-container">\
-  <div class="stream">\
-  <ol>\
-'+tweet.html+(tweet.expandedFooter || '')+'\
-  </ol>\
-  </div>\
-  </div>\
-</body>\
-</html>';
+    return attachmentTemplate[0] + tweet.html+(tweet.expandedFooter || '') + attachmentTemplate[1];
 }
 
 function writeState() {
