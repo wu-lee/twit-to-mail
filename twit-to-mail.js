@@ -36,13 +36,13 @@ function log(message) {
 var notified = false;
 function notify(subject, text) {
     if (notified)
-	return;
+        return;
     
     try {
-	sendNotification(subject, text);
+        sendNotification(subject, text);
     }
     catch(e) {
-	log("failed to send notification email: "+e);
+        log("failed to send notification email: "+e);
     }
     
     notified = true;
@@ -60,22 +60,22 @@ function cleanup(callback) {
     
     // do app specific cleaning before exiting
     process.on('exit', function (code) {
-	notify("twit-to-mail.js exited: "+code);
-	process.emit('cleanup');
+        notify("twit-to-mail.js exited: "+code);
+        process.emit('cleanup');
     });
     
     // catch ctrl+c event and exit normally
     process.on('SIGINT', function () {
-	console.log('Ctrl-C...');
-	process.exit(98);
+        console.log('Ctrl-C...');
+        process.exit(98);
     });
     
     //catch uncaught exceptions, trace, then exit normally
     process.on('uncaughtException', function(e) {
-	log('Uncaught Exception...');
-	log(e.stack);
-	notify("twit-to-mail.js exception: "+e, JSON.stringify(e));
-	process.exit(99);
+        log('Uncaught Exception...');
+        log(e.stack);
+        notify("twit-to-mail.js exception: "+e, JSON.stringify(e));
+        process.exit(99);
     });
 };
 
@@ -107,7 +107,7 @@ function parseAttachmentTemplate(file, template) {
 
 function sourceEscape(name) {
     function quote(str) {
-	return '"'+str.replace(/(["\\])/g, '\\$1')+'"'; 
+        return '"'+str.replace(/(["\\])/g, '\\$1')+'"'; 
     }
     name = name.replace(/[\000-\0390]/g, ' ');
     return name.match(/[()<>@,;:\\".[\]]/)? quote(name) : name;
@@ -158,8 +158,8 @@ function send(tweets) {
         log("send to "+opts.to+": "+opts.subject);
         server.send(opts, function(err, message) { if (err) log(err); });
 
-	state.seen.unshift(tweet.tweetId);
-	state.seen.length = (config.numDedupTweets || 200);
+        state.seen.unshift(tweet.tweetId);
+        state.seen.length = (config.numDedupTweets || 200);
     }
 }
 
@@ -189,11 +189,11 @@ function processLine (line) {
     var tweet = JSON.parse(line);
     
     if (tweetFilter(tweet)) {
-	log("received tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
-	state.tweets.push(tweet);
+        log("received tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+        state.tweets.push(tweet);
     }
     else {
-	log("ignoring tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+        log("ignoring tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
     }
 }
 
@@ -205,26 +205,26 @@ var phantomjsDir = path.resolve(
 function Scraper() {
     var self = this; // for use in inner closures
     this.process = child_process.spawn(
-	config.casperjsPath,
-	(config.casperjsOpts || []).concat('./scraper.js'),
-	{ env: { PATH: process.env.PATH+':'+phantomjsDir }}
+        config.casperjsPath,
+        (config.casperjsOpts || []).concat('./scraper.js'),
+        { env: { PATH: process.env.PATH+':'+phantomjsDir }}
     );
     var pid = this.process.pid;
 
     this.process.on('error', function(err) {
-	log("error managing scraper.js (pid "+pid+"): "+err);
-	notify("error managing scraper.js", err);
-	process.exit(-1);
+        log("error managing scraper.js (pid "+pid+"): "+err);
+        notify("error managing scraper.js", err);
+        process.exit(-1);
     });
     this.process.on('exit', function(code, signal) { 
-	var msg = "scraper.js (pid "+pid+")"+
-	    (code==null? "" : " exited with code "+code)+
-	    (signal==null? "" : " was halted with signal "+signal);
-	log(msg);
-	notify("unexpected termination of scraper.js", msg);
+        var msg = "scraper.js (pid "+pid+")"+
+            (code==null? "" : " exited with code "+code)+
+            (signal==null? "" : " was halted with signal "+signal);
+        log(msg);
+        notify("unexpected termination of scraper.js", msg);
 
-	// relaunch the scraper
-	self.process = new Scraper();
+        // relaunch the scraper
+        self.process = new Scraper();
     });
 
     this.process.stdout.pipe(split()).on('data', processLine)
