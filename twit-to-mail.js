@@ -168,6 +168,9 @@ function formatTweet(tweet) {
     .PlayableMedia {\
        height: auto !important;\
     }\
+    .AdaptiveMedia-singlePhoto {\
+      padding-top: inherit !important;\
+    }\
   </style>\
 </head>\
 <body >\
