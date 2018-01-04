@@ -21,6 +21,8 @@ if (!state.seen) state.seen = [];
 
 
 var filter = config.filter || noOp; // noOp returns true, so doesn't filter
+var formatter = config.formatter || formatTweet; 
+
 function log(message) {
     [].unshift.call(arguments, new Date().toLocaleString());
     console.log.apply(console, arguments)
@@ -119,7 +121,7 @@ function send(tweets) {
             date: new Date(Number(tweet.date)).toString(),
             'x-tweet-id': tweet.tweetId,
             attachment: [
-                {data: formatTweet(tweet), alternative:true},
+                {data: formatter(tweet), alternative:true},
             ],
         };
         log("send to "+opts.to+": "+opts.subject);
