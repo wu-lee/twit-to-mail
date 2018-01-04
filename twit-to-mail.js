@@ -20,13 +20,10 @@ if (!state.tweets) state.tweets = [];
 if (!state.seen) state.seen = [];
 
 
-// This may exit the process if it fails
-var attachmentTemplate = parseAttachmentTemplate(
-    'resources/attachmentTemplate.html',
-    config.attachmentTemplate
-);
 var filter = config.filter || noOp; // noOp returns true, so doesn't filter
-var formatter = config.formatter || formatTweet; 
+
+// This may exit the process if it fails
+var formatter = mkFormatter(config.formatter); 
 
 function log(message) {
     [].unshift.call(arguments, new Date().toLocaleString());
@@ -78,6 +75,33 @@ function cleanup(callback) {
         process.exit(99);
     });
 };
+
+/** Parse the config.formatter entry, if present
+ *
+ * @param {object} config Optionally, the config.formatter element
+ * @returns a tweet formatter function, accepting the tweet instance
+ * and returning a string body attachment.
+ */
+function mkFormatter(config) {
+    if (!config)
+        config = {};
+    
+    if (typeof(config) === 'function')
+        return config; // A custom function
+
+    // This may exit the process
+    var attachmentTemplate = parseAttachmentTemplate(
+        'resources/attachmentTemplate.html',
+        config.attachmentTemplate
+    );
+
+    return function(tweet) {
+        return attachmentTemplate[0] +
+            tweet.html+(tweet.expandedFooter || '') +
+            attachmentTemplate[1];
+    };
+}
+
 
 /** Loads a string from the file, if not supplied as the second paramter
  *
@@ -161,10 +185,6 @@ function send(tweets) {
         state.seen.unshift(tweet.tweetId);
         state.seen.length = (config.numDedupTweets || 200);
     }
-}
-
-function formatTweet(tweet) {
-    return attachmentTemplate[0] + tweet.html+(tweet.expandedFooter || '') + attachmentTemplate[1];
 }
 
 function writeState() {

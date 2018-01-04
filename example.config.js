@@ -41,6 +41,8 @@ module.exports = {
 //        subjectSplitAfter: 30, // Sets the truncation length used for subject line
     },
 //    filter: require('./customFilter.js'), // Load a custom tweet filter
-//    formatter: require('./customFormatter.js'), // Load a custom tweet formatter
-//    attachmentTemplate: 'foo<tweet/>bar', // A custom tweet attachment for the default formatter
+//    formatter: // require('./customFormatter.js'), // Load a custom tweet formatter function, or
+//    formatter: { // define settings for default formatter
+//        attachmentTemplate: 'foo<tweet/>bar', // A custom tweet attachment for the default formatter
+//    },
 };
