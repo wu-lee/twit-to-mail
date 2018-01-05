@@ -148,7 +148,7 @@ casper.run(function() {
                     tweet.attr[attr.name] = attr.value;
                     if (attr.name.indexOf('data-') == 0) {
                         // Unpack certain data attributes into JS primitives, for convenience
-                        tweet[toCamelCase(attr.name.slice(5))] =
+                        tweet.data[toCamelCase(attr.name.slice(5))] =
                             attr.value === 'true'? true :
                             attr.value === 'false'? false :
                             attr.value === undefined? undefined : // avoid isNaN edge case
