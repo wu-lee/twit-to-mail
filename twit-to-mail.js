@@ -8,6 +8,8 @@ var fs = require('fs');
 var split = require('split');
 var child_process = require('child_process');
 var config = require('./config.js') || process.exit(-1);
+preprocessConfig(config);
+
 if (!config.stateFile)
     config.stateFile = './state.json';
 var state = {};
@@ -129,6 +131,25 @@ function parseAttachmentTemplate(file, template) {
         console.error("attachment template malformed, may have no <tweet/> placeholder");
     return [template[0] || '', template[1] || ''];
 }
+
+/** General place for any munging of the config before we use it
+ *
+ * @param config {object} The config, to be modified in-place.
+ */
+function preprocessConfig(config) {
+    // If config.parser is a string, ensure we can read the file
+    // before we launch the scraper (which will fail)
+    if (typeof(config.parser) === 'string') {
+        try {
+            fs.readFileSync(config.parser, 'utf8');
+        }
+        catch(e) { // No such file, bail out here
+            console.error("failed to load parser file '"+config.parser+"': "+e.message);
+            process.exit(-1);
+        }
+    }
+}
+
 
 function sourceEscape(name) {
     function quote(str) {

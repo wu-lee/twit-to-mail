@@ -1,6 +1,12 @@
 var config = require('./config.js');
-var parser = mkParser(config.parser);
+var fs = require('fs');
 var casper = require('casper').create(config.casper);
+if (typeof(config.parser) === 'string') {
+    // If config.parser is a string, read the file
+    // (its readability should have been checked by twit-to-mail.js)
+    config.parser = fs.read(config.parser, {charset: 'utf8'});
+}
+
 
 var page = require('webpage').create();
 console.log('scraper starting...');
@@ -88,6 +94,10 @@ casper.waitForSelector(
         this.echo("Got to twitter stream");        
         if (config.capture.success)
             this.capture(config.capture.success);
+
+        // Define the parser once, as a global
+        console.log(">>>>>>>>>>");
+//        casper.evaluate(defParser, config.parser);
     },
     function() {
         this.echo("Failed to get to twitter stream");
@@ -128,11 +138,11 @@ casper.run(function() {
                 .reverse()
                 .map($)
                 .filter(selectElement)
-                .map(parser);
+                .map(window.parser);
 
             children.remove();
             return tweets;
-        };
+        }
 
         if (config.capture.scrape)
             casper.capture(config.capture.scrape);
@@ -157,24 +167,43 @@ casper.run(function() {
     pollWrapper();
 });
 
-/** Tweet parser constructor.
+
+/** Tweet parser definer.
  *
- * The config argument may be a function, in whcih case it is returned
- * verbatim. Otherwise it is used to configure the default parser
- * function returned.
+ * This is run in the context of casper, so must be self-contained and
+ * not use any local functions or variables (see caspar docs for
+ * casper.execute())
+ *
+ * It defines the parser() function in that context.
+ *
+ * The config argument may be a string, in which case it is
+ * eval()ed and the result returned. Otherwise it is used to
+ * configure the default parser function returned.
  *
  * @config {Function|Object} Defines the parser
- * @returns {Function} A function accepting a JQuery object and a numeric index, 
- * returning a tweet object.
  */
-function mkParser(config) {
-    if (typeof(config) === 'function')
-        return config;
+function defParser(config) {
+    console.log("defParser", config);
+    if (typeof(config) === 'string') {
+        // Wrap it. Pass also a function which can be used to
+        // reconstruct the default parser.
+        config = "function mkParser(config) {\n"+parseTweet.toString()+"\n}\n"+
+            "function evaluate(module, mkParser) {\n"+config+"\n}\n"+
+            "module = {};\n"+
+            "evaluate(module, mkParser);\n"+
+            "window.parser = module.export";
+        console.error("evaluating parser function definition:", config); // DEBUG
 
+        window.parser = "fooey";
+        eval(config);
+        return;
+    }
+    
     if (typeof(config) !== 'object')
         config = {};
 
-    return parseTweet;
+    parser = parseTweet;
+    return;
     
     /** Default tweet parser
      *
@@ -183,32 +212,12 @@ function mkParser(config) {
      * @returns {object} The parsed tweet object
      */
     function parseTweet(jqnode, ix) {
-        var html = jqnode.find('.original-tweet').first(); // FIXME currently ignores subsequent elems
-        var tweetId = html.attr('data-retweet-id') || html.attr('data-tweet-id');
-        var expandedFooter = html.attr('data-expanded-footer');
-        var tweet = {
-            type: 'tweet',
-            youBlock: html.attr('data-you-block') === 'false',
-            followsYou: html.attr('data-follows-you') === 'true',
-            youFollow: html.attr('data-you-follows') === 'true',
-            hasCards: html.attr('data-has-cards') === 'true',
-            hasNativeMedia: html.attr('data-has-native-media') === 'true',
-            youFollow: html.attr('data-you-follows') === 'true',
-            promoted: html.attr('data-promoted') === 'true',
-            cardType: html.attr('data-card-type'),
-            retweeter: html.attr('data-retweeter'),
-            userId: html.attr('data-user-id'),
-            name: html.attr('data-name'),
-            screenName: html.attr('data-screen-name'),
-            retweetId: html.attr('data-retweet-id'),
-            permalinkPath: html.attr('data-permalink-path'),
-            itemId:  html.attr('data-item-id'),
-            date: html.find('[data-time-ms]').attr('data-time-ms'),
-            html: html[0].outerHTML,
-            expandedFooter: expandedFooter,
-            text: html.find('.tweet-text').text(),
-            tweetId: tweetId,
-        };
-        return tweet;
+        console.log("CALLING parseTweet");
+        // currently ignores subsequent elems
+        var html = jqnode.find('.original-tweet').first();
+
+        preprocess(html);
+
+        WHOOPSIE
     }
 }
