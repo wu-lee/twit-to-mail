@@ -208,7 +208,7 @@ function processLine (line) {
         return;
     }
     var tweet = JSON.parse(line);
-    var label = tweet.text.substr(0, 50)+" ~ "+tweet.tweetId+"@"+tweet.data.name;
+    var label = tweet.text.substr(0, 50)+" ~ "+tweet.tweetId+"@"+tweet.data.screenName;
     
     if (tweetFilter(tweet)) {
         log("received tweet "+label);
