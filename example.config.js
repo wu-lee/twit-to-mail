@@ -1,3 +1,19 @@
+/** Config for scraper.js and twit-to-mail.js.
+ *
+ * Note that both Casper and NodeJS read this, so it must be valid
+ * Javascript in both environments. Keeping the code here simple will
+ * help.
+ *
+ * If you need to include code specific to one or the other, you need
+ * to conditionally parse/run it only in that environment (depending
+ * whether it is a compile or run-time incompatibility). Conditional
+ * require()s serve for both cases.  Detecting the run-time
+ * environment can be done, if slightly crudely, by testing
+ * "typeof(twitToMail) !== 'undefined'", which will be true only in
+ * the twit-to-mail.js (NodeJS) environment, not in the scraper.js
+ * (Casper) environment.
+ */
+
 module.exports = {
     credentials: { // Twitter login credentials.
         user: 'twitteruser',

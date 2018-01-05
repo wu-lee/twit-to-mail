@@ -1,6 +1,7 @@
 /* This reads JSON objects output by twit-to-mailer.js from
  * stdin and mails them.
  */
+global.twitToMail = true; // Flag for environment detection in config.js
 var email = require('emailjs/email');
 var path = require('path');
 var fs = require('fs');
