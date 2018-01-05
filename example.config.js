@@ -22,9 +22,9 @@ module.exports = {
     startUrl: 'https://twitter.com/', // Twitter page to open on start
     pollInterval: 1000*60*15, // Scraper polling frequency in milliseconds
     selectors: { // Selectors etc. passed to casper.waitForSelector. Generally not user servicable.
-        loginForm: 'form.signin',
-        userInput: '#signin-email',
-        passwordInput: '#signin-password',
+        loginForm: 'form.LoginForm',
+        userInput: '*[name="session[username_or_email]"]',
+        passwordInput: '*[name="session[password]"]',
         stream: "#stream-items-id",
         updateButton: '#global-nav-home a',
     },
@@ -41,6 +41,7 @@ module.exports = {
             loadPlugins: false,
             userAgent: "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:42.0) Gecko/20100101 Firefox/42.0",
         },
+        waitTimeout: 15000,
     },
     mailer: {
         server: { // Mailserver parameters passed to emailjs.email.server.connect
