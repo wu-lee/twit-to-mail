@@ -121,7 +121,7 @@ casper.run(function() {
                 return false;
             }
 
-            function formatTweet(jqnode, ix) {
+            function parseTweet(jqnode, ix) {
                 var html = jqnode.find('.original-tweet').first(); // FIXME currently ignores subsequent elems
                 var tweetId = html.attr('data-retweet-id') || html.attr('data-tweet-id');
                 var expandedFooter = html.attr('data-expanded-footer');
@@ -157,7 +157,7 @@ casper.run(function() {
                 .reverse()
                 .map($)
                 .filter(selectElement)
-                .map(formatTweet);
+                .map(parseTweet);
 
             children.remove();
             return tweets;
