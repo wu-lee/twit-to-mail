@@ -142,8 +142,9 @@ casper.run(function() {
                     html: html.get(0).outerHTML,
                     text: extractText(html),
                 };
-                
-                html.get(0).attributes.forEach(function(attr) {
+
+                var attrs = html.get(0).attributes;
+                Array.prototype.forEach.call(attrs, function(attr) {
                     tweet.attr[attr.name] = attr.value;
                     if (attr.name.indexOf('data-') == 0) {
                         // Unpack certain data attributes into JS primitives, for convenience
