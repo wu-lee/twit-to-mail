@@ -98,7 +98,7 @@ function mkFormatter(config) {
 
     return function(tweet) {
         return attachmentTemplate[0] +
-            tweet.html+(tweet.expandedFooter || '') +
+            tweet.html+(tweet.data.expandedFooter || '') +
             attachmentTemplate[1];
     };
 }
@@ -161,16 +161,16 @@ function send(tweets) {
         var tweet = tweets[ix];
         
         var splitAfter = config.mailer.subjectSplitAfter || 30;
-        var tweeter = (tweet.retweeter == null? tweet.screenName : tweet.retweeter);
-        var source = tweet.retweeter?
-            (tweet.name + " retweeted by "+tweet.retweeter):
-            (tweet.name);
+        var tweeter = (tweet.data.retweeter == null? tweet.data.screenName : tweet.data.retweeter);
+        var source = tweet.data.retweeter?
+            (tweet.data.name + " retweeted by "+tweet.data.retweeter):
+            (tweet.data.name);
         var text = (tweet.text || '');
         var splitPoint = text.indexOf(' ', splitAfter);
         var subject = splitPoint > 0? 
             text.substr(0, splitPoint) : text;
         var opts = {
-            text: tweet.text,
+            text: text,
             from: sourceEscape(source) +' <'+ tweeter +'@twitmonkey.net>',
             to: config.mailer.to,
             subject: subject,
@@ -208,13 +208,14 @@ function processLine (line) {
         return;
     }
     var tweet = JSON.parse(line);
+    var label = tweet.text.substr(0, 50)+" ~ "+tweet.tweetId+"@"+tweet.data.name;
     
     if (tweetFilter(tweet)) {
-        log("received tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+        log("received tweet "+label);
         state.tweets.push(tweet);
     }
     else {
-        log("ignoring tweet "+tweet.tweetId+": "+tweet.text.substr(0, 50));
+        log("ignoring tweet "+label);
     }
 }
 
