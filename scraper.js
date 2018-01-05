@@ -1,4 +1,5 @@
 var config = require('./config.js');
+var parser = mkParser(config.parser);
 var casper = require('casper').create(config.casper);
 
 var page = require('webpage').create();
@@ -121,75 +122,13 @@ casper.run(function() {
                 return false;
             }
 
-            /** Default tweet parser
-             *
-             * @param jqnode {object} The root jquery object.
-             * @param ix {Number} The (zero-based) index of the tweet on the page
-             * @returns {object} The parsed tweet object
-             */
-            function parseTweet(jqnode, ix) {
-                // currently ignores subsequent elems
-                var html = jqnode.find('.original-tweet').first(); 
-
-                preprocess(html);
-                
-                var tweet = {
-                    type: 'tweet',
-                    tweetId: html.attr('data-retweet-id') || html.attr('data-tweet-id'),
-                    attr: {},
-                    data: {},
-                    date: html.find('[data-time-ms]').attr('data-time-ms'),
-                    html: html.get(0).outerHTML,
-                    text: extractText(html),
-                };
-                
-                html.get(0).attributes.forEach(function(attr) {
-                    tweet.attr[attr.name] = attr.value;
-                    if (attr.name.indexOf('data-') == 0) {
-                        // Unpack certain data attributes into JS primitives, for convenience
-                        tweet[toCamelCase(attr.name.slice(5))] =
-                            attr.value === 'true'? true :
-                            attr.value === 'false'? false :
-                            attr.value === undefined? undefined : // avoid isNaN edge case
-                            !isNaN(attr.value)? Number(attr.value) :
-                            attr.value;
-                    }
-                });
-
-                return tweet;
-                
-                // Convert foo-bar-baz -> fooBarBaz
-                function toCamelCase(text) {
-                    return text.replace(/(-.)/g, toUpper);
-                    function toUpper(ix) {
-                        return ix.charAt(1).toUpperCase();
-                    }
-                }
-
-                // Converts the tweet-text node into text
-                function extractText(tweet) {
-                    return html.find('.tweet-text').text();
-                }
-
-                function preprocess(html) {
-                    // We don't want elided, click-through URLs.
-                    html.find('.tweet-text').find('a[data-expanded-url]').each(replaceWithUrl);
-                    
-                    function replaceWithUrl(ix, node) {
-                        node = $(node);
-                        var url = node.attr('data-expanded-url');
-                        node.replaceWith(" <a href='"+url+"'>"+url+"</a>");
-                    }
-                }
-            }
-
             var children = $(config.selectors.stream).children();
 
             var tweets = children.get()
                 .reverse()
                 .map($)
                 .filter(selectElement)
-                .map(parseTweet);
+                .map(parser);
 
             children.remove();
             return tweets;
@@ -217,3 +156,59 @@ casper.run(function() {
     var interval = setInterval(pollWrapper, config.pollInterval);
     pollWrapper();
 });
+
+/** Tweet parser constructor.
+ *
+ * The config argument may be a function, in whcih case it is returned
+ * verbatim. Otherwise it is used to configure the default parser
+ * function returned.
+ *
+ * @config {Function|Object} Defines the parser
+ * @returns {Function} A function accepting a JQuery object and a numeric index, 
+ * returning a tweet object.
+ */
+function mkParser(config) {
+    if (typeof(config) === 'function')
+        return config;
+
+    if (typeof(config) !== 'object')
+        config = {};
+
+    return parseTweet;
+    
+    /** Default tweet parser
+     *
+     * @param jqnode {object} The root jquery object.
+     * @param ix {Number} The (zero-based) index of the tweet on the page
+     * @returns {object} The parsed tweet object
+     */
+    function parseTweet(jqnode, ix) {
+        var html = jqnode.find('.original-tweet').first(); // FIXME currently ignores subsequent elems
+        var tweetId = html.attr('data-retweet-id') || html.attr('data-tweet-id');
+        var expandedFooter = html.attr('data-expanded-footer');
+        var tweet = {
+            type: 'tweet',
+            youBlock: html.attr('data-you-block') === 'false',
+            followsYou: html.attr('data-follows-you') === 'true',
+            youFollow: html.attr('data-you-follows') === 'true',
+            hasCards: html.attr('data-has-cards') === 'true',
+            hasNativeMedia: html.attr('data-has-native-media') === 'true',
+            youFollow: html.attr('data-you-follows') === 'true',
+            promoted: html.attr('data-promoted') === 'true',
+            cardType: html.attr('data-card-type'),
+            retweeter: html.attr('data-retweeter'),
+            userId: html.attr('data-user-id'),
+            name: html.attr('data-name'),
+            screenName: html.attr('data-screen-name'),
+            retweetId: html.attr('data-retweet-id'),
+            permalinkPath: html.attr('data-permalink-path'),
+            itemId:  html.attr('data-item-id'),
+            date: html.find('[data-time-ms]').attr('data-time-ms'),
+            html: html[0].outerHTML,
+            expandedFooter: expandedFooter,
+            text: html.find('.tweet-text').text(),
+            tweetId: tweetId,
+        };
+        return tweet;
+    }
+}
