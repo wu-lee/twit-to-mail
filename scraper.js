@@ -68,8 +68,8 @@ casper.waitForSelector(
         selectors[config.selectors.passwordInput] = config.credentials.password;
         
         this.fillSelectors(config.selectors.loginForm, selectors, true);
-        
-        //this.echo(JSON.stringify(this.getFormValues(loginFormSelector)));// DEBUG
+
+        //this.echo(JSON.stringify(this.getFormValues(config.selectors.loginForm)));// DEBUG
         //this.capture('login.png'); // DEBUG
     },
     function() {
