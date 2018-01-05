@@ -242,6 +242,13 @@ function Scraper() {
             (code==null? "" : " exited with code "+code)+
             (signal==null? "" : " was halted with signal "+signal);
         log(msg);
+
+        // Special case scraper.js can pass to us
+        if (code === 66) {
+            notify("unrecoverable termination of scraper.js", msg);
+            process.exit(66);
+        }
+
         notify("unexpected termination of scraper.js", msg);
 
         // relaunch the scraper

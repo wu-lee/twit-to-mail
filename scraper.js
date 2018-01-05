@@ -76,7 +76,7 @@ casper.waitForSelector(
         this.echo("Failed to get to twitter login form");
         if (config.capture.failure)
             this.capture(config.capture.failure);
-        process.exit(-1);
+        this.die("Exiting", 66);
     }
 );
 
@@ -92,7 +92,7 @@ casper.waitForSelector(
         this.echo("Failed to get to twitter stream");
         if (config.capture.failure)
             this.capture(config.capture.failure);
-        process.exit(-1);
+        this.die("Exiting", 66);
     }
 );
 
